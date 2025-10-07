@@ -28,7 +28,6 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductCreateRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = auth.getName();
 
         Product product = new Product();
         product.setName(request.getName());
