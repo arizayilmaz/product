@@ -5,6 +5,7 @@ import com.aryil.productapi.dto.request.ProductCreateRequest;
 import com.aryil.productapi.dto.response.ApiResponse;
 import com.aryil.productapi.entity.Product;
 import com.aryil.productapi.mapper.ProductMapper;
+import com.aryil.productapi.messaging.MessageProducer;
 import com.aryil.productapi.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class ProductController {
     private final ProductService productService;
     private final ProductMapper productMapper;
     private final MessageSource messageSource;
+    private final MessageProducer messageProducer;
+
     @GetMapping
     @PreAuthorize("hasAuthority('PRODUCT_READ')")
     public ResponseEntity<ApiResponse<List<ProductDTO>>> getAll(Locale locale) {
@@ -41,6 +44,7 @@ public class ProductController {
             @RequestBody ProductCreateRequest request,
             Locale locale) {
         Product created = productService.createProduct(request);
+        messageProducer.sendProductMessage("Ürün oluşturuldu: " + created.getName());
         String msg = messageSource.getMessage("success.product.created", null, locale);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, msg, productMapper.toDto(created)));

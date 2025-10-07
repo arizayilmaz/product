@@ -2,6 +2,7 @@ package com.aryil.productapi.controller;
 
 import com.aryil.productapi.dto.UserDTO;
 import com.aryil.productapi.dto.request.UserRegisterRequest;
+import com.aryil.productapi.messaging.MessageProducer;
 import com.aryil.productapi.service.UserService;
 import com.aryil.productapi.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,15 +17,16 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final MessageProducer messageProducer;
 
     @PostMapping("/register")
     @PreAuthorize("permitAll()")
     public ResponseEntity<UserDTO> registerUser(@RequestBody UserRegisterRequest request) {
-        return ResponseEntity.ok(
-                userMapper.toDto(
-                        userService.registerUser(request.getUsername(), request.getPassword(), request.getEmail())
-                )
+        UserDTO dto = userMapper.toDto(
+                userService.registerUser(request.getUsername(), request.getPassword(), request.getEmail())
         );
+        messageProducer.sendCategoryMessage("Yeni user oluşturuldu: " + dto.getUsername());
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{username}")

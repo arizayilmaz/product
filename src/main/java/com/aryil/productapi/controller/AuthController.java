@@ -4,6 +4,7 @@ import com.aryil.productapi.dto.request.AuthRequest;
 import com.aryil.productapi.dto.request.RegisterRequest;
 import com.aryil.productapi.dto.response.AuthResponse;
 import com.aryil.productapi.dto.response.ApiResponse;
+import com.aryil.productapi.messaging.MessageProducer;
 import com.aryil.productapi.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final MessageProducer messageProducer;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@RequestBody RegisterRequest req) {
         authService.register(req);
+        messageProducer.sendCategoryMessage("Yeni kullanıcı kaydı: " + req.getUsername());
         return ResponseEntity.ok(new ApiResponse<>(true, "Kayıt başarılı", null));
     }
 

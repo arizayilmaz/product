@@ -5,6 +5,7 @@ import com.aryil.productapi.dto.request.CategoryRequest;
 import com.aryil.productapi.dto.response.ApiResponse;
 import com.aryil.productapi.entity.Category;
 import com.aryil.productapi.mapper.CategoryMapper;
+import com.aryil.productapi.messaging.MessageProducer;
 import com.aryil.productapi.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -25,12 +26,14 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final CategoryMapper categoryMapper;
     private final MessageSource messageSource;
+    private final MessageProducer messageProducer;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CATEGORY_CREATE')")
     public ResponseEntity<ApiResponse<CategoryDTO>> createCategory(
             @RequestBody CategoryRequest request, Locale locale) {
         Category category = categoryService.createCategory(request.getName(), request.getDescription());
+        messageProducer.sendCategoryMessage("Kategori oluşturuldu: " + category.getName());
         String msg = messageSource.getMessage("success.category.created", null, locale);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, msg, categoryMapper.toDto(category)));

@@ -3,6 +3,7 @@ package com.aryil.productapi.service;
 import com.aryil.productapi.dto.request.ProductCreateRequest;
 import com.aryil.productapi.entity.Category;
 import com.aryil.productapi.entity.Product;
+import com.aryil.productapi.messaging.MessageProducer;
 import com.aryil.productapi.repository.CategoryRepository;
 import com.aryil.productapi.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -15,12 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final MessageProducer messageProducer;
 
     @Transactional
     public Product createProduct(ProductCreateRequest request) {
@@ -39,7 +42,11 @@ public class ProductService {
             product.setCategories(categories);
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+
+        messageProducer.sendProductMessage("New product created: " + saved.getName());
+
+        return saved;
     }
 
     public List<Product> getAll() {
@@ -71,7 +78,11 @@ public class ProductService {
             product.setCategories(categories);
         }
 
-        return productRepository.save(product);
+        Product updated = productRepository.save(product);
+
+        messageProducer.sendProductMessage("Product updated: " + updated.getName());
+
+        return updated;
     }
 
     @Transactional
@@ -82,7 +93,11 @@ public class ProductService {
         Set<Category> categories = new HashSet<>(categoryRepository.findAllById(categoryIds));
         product.setCategories(categories);
 
-        return productRepository.save(product);
+        Product updated = productRepository.save(product);
+
+        messageProducer.sendProductMessage("Product categories updated: " + updated.getName());
+
+        return updated;
     }
 
     @Transactional
@@ -100,5 +115,7 @@ public class ProductService {
         }
 
         productRepository.delete(product);
+
+        messageProducer.sendProductMessage("Product deleted: " + product.getName());
     }
 }
